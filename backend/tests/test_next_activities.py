@@ -1,6 +1,10 @@
 import unittest
+import subprocess
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
+import imageio_ffmpeg
 from fastapi.testclient import TestClient
 
 from backend.app.main import app
@@ -18,6 +22,16 @@ class NextActivitiesTests(unittest.TestCase):
         original, _ = prepare_food_image(sample_image(), "image/png")
         values = extract_features(original)
         self.assertTrue(all(0 <= value <= 1 for value in values.model_dump().values()))
+
+    def test_dark_photo_gets_separate_recognition_view(self):
+        from backend.app.services.image_processing import prepare_food_image
+        from io import BytesIO
+        from PIL import Image
+        buffer = BytesIO()
+        Image.new("RGB", (120, 80), (10, 10, 10)).save(buffer, format="PNG")
+        original, enhanced = prepare_food_image(buffer.getvalue(), "image/png")
+        self.assertIsNotNone(enhanced)
+        self.assertNotEqual(original, enhanced)
 
     def test_freshness_endpoint_maps_spoilage_to_cautious_advice(self):
         output = {"is_food": True, "item_name": "Apple", "level": "Spoiled", "confidence": .8, "visual_signals": ["Visible fuzzy patch"]}
@@ -63,6 +77,16 @@ class NextActivitiesTests(unittest.TestCase):
             response = self.client.post("/api/analyze/hygiene", files={"file": ("bad.mp4", b"invalid video", "video/mp4")})
         self.assertEqual(response.status_code, 422)
         self.assertEqual(self.client.post("/api/analyze/food").status_code, 400)
+
+    def test_dark_video_decodes_to_sampled_frame(self):
+        from backend.app.services.hygiene import analyze_hygiene
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "dark.mp4"
+            subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "color=c=black:s=160x120:d=1", "-pix_fmt", "yuv420p", str(path)], check=True, capture_output=True)
+            with patch("backend.app.services.hygiene.ask_json", return_value={"duration": "1 second", "checks": [], "alerts": [], "limitations": []}):
+                result = analyze_hygiene(path.read_bytes(), ".mp4")
+        self.assertEqual(result.frames_analyzed, 1)
+        self.assertIsNone(result.score)
 
 
 if __name__ == "__main__":

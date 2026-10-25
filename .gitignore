@@ -4,6 +4,7 @@ dist/
 __pycache__/
 *.pyc
 .env
+.streamlit/secrets.toml
 backend/data/
 .DS_Store
 

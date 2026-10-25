@@ -2,6 +2,8 @@
 
 FoodVerse AI is a React and FastAPI food intelligence workspace. It accepts food photos, kitchen video, text prompts, and voice notes, then presents food recognition, estimated nutrition, visual freshness signals, hygiene observations, recipes, and meal plans.
 
+**Mentor links:** [GitHub source](https://github.com/bhavishyjain/food-verse) and a Streamlit Community Cloud demo deployed from [`streamlit_app.py`](streamlit_app.py). The Streamlit app reuses the same Python analysis services; the React/FastAPI interface remains in this repository. Add the actual Streamlit URL here after deployment.
+
 ## Current capabilities
 
 | Workflow | Input | Output |
@@ -27,6 +29,17 @@ Images are EXIF oriented, resized, converted to RGB, and conditionally enhanced 
 Open <http://localhost:5173>. Vite proxies `/api` to FastAPI. API docs are at <http://localhost:8000/docs>; `/api/health` reports whether an AI key is configured. Docker Compose can also start both services; pass your selected provider key to the API container. Structured report history is stored in `backend/data/foodverse.sqlite3` by default; set `FOODVERSE_DB_PATH` to change that path.
 
 Run the focused backend checks with `python -m unittest discover -s backend/tests -v`, and verify the frontend with `npm run build`.
+
+## Publish a Streamlit demo
+
+Streamlit Community Cloud runs a Streamlit Python entrypoint, so `streamlit_app.py` is a companion interface for demonstrating the existing analysis services. It does not host the React frontend or launch FastAPI. The root `requirements.txt` installs its dependencies, and `.streamlit/config.toml` supplies the theme and upload limit.
+
+1. Push the repository to GitHub. Keep `.env` and `.streamlit/secrets.toml` uncommitted. Confirm the repository is public if you want your mentor to view its source without a GitHub invitation.
+2. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/) and connect your GitHub account. Create an app using repository `bhavishyjain/food-verse`, branch `main`, and entrypoint `streamlit_app.py`. Select Python 3.12 in Advanced settings.
+3. In Advanced settings → Secrets, add **one** provider key, for example `OPENAI_API_KEY = "..."` or `GROQ_API_KEY = "..."`. If using Groq while an OpenAI key is also present, set `FOODVERSE_AI_PROVIDER = "groq"`. Never put real keys in GitHub or a public URL. The example format is in `.streamlit/secrets.toml.example`.
+4. After deployment, open the Streamlit URL in a private browser window and try one text recipe plus one small image. Send that URL and the GitHub repository URL to your mentor. If the model key is absent, the demo opens but analysis buttons explain that setup is needed.
+
+For local testing, install `pip install -r requirements.txt`, set a provider key in your shell, and run `streamlit run streamlit_app.py`. Large video jobs may be limited by Streamlit Community Cloud resources; use short clips for demonstration.
 
 ## Activity 1.1–1.4 implementation
 
