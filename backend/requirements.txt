@@ -1,0 +1,14 @@
+# Backend API and response validation
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+pydantic==2.10.4
+
+# Image and video processing
+Pillow==11.3.0
+imageio-ffmpeg==0.6.0
+
+# Model inference, audio transcription, and configuration
+openai==2.54.0
+python-dotenv==1.2.4
+
