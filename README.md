@@ -2,7 +2,7 @@
 
 FoodVerse AI is a React and FastAPI food intelligence workspace. It accepts food photos, kitchen video, text prompts, and voice notes, then presents food recognition, estimated nutrition, visual freshness signals, hygiene observations, recipes, and meal plans.
 
-**Mentor links:** [GitHub source](https://github.com/bhavishyjain/food-verse) and a Streamlit Community Cloud demo deployed from [`streamlit_app.py`](streamlit_app.py). The Streamlit app reuses the same Python analysis services; the React/FastAPI interface remains in this repository. Add the actual Streamlit URL here after deployment.
+**Mentor links:** [GitHub source](https://github.com/bhavishyjain/food-verse) and [Streamlit demo](https://food-verse-dmym3c7mhe9igb4evk492k.streamlit.app/) deployed from [`streamlit_app.py`](streamlit_app.py). The Streamlit app reuses the same Python analysis services; the React/FastAPI interface remains in this repository.
 
 ## Current capabilities
 

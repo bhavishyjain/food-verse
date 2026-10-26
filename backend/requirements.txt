@@ -2,7 +2,7 @@
 fastapi==0.162.0
 uvicorn[standard]==0.52.4
 python-multipart==0.0.20
-pydantic==2.10.4
+pydantic==2.14.1
 
 # Image and video processing
 Pillow==11.3.0
