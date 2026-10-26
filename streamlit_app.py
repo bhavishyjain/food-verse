@@ -11,7 +11,8 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 
-st.set_page_config(page_title="FoodVerse AI · Demo", page_icon="🥗", layout="wide")
+st.set_page_config(page_title="FoodVerse AI · Demo", page_icon="🥗", layout="wide", initial_sidebar_state="expanded")
+st.markdown(f"<style>{(Path(__file__).parent / '.streamlit' / 'style.css').read_text()}</style>", unsafe_allow_html=True)
 
 # Streamlit Cloud secrets are available only at runtime. Map them before the
 # model provider module is imported so the existing provider selection works.
@@ -35,6 +36,31 @@ GITHUB_URL = "https://github.com/bhavishyjain/food-verse"
 MAX_IMAGE = 10 * 1024 * 1024
 MAX_AUDIO = 20 * 1024 * 1024
 MAX_VIDEO = 100 * 1024 * 1024
+PAGES = ["Overview", "Food recognition", "Freshness", "Kitchen hygiene", "Cooking assistant", "Meal planner"]
+
+
+def go_to(page: str) -> None:
+    st.session_state["workspace_page"] = page
+
+
+def page_header(kicker: str, title: str, description: str) -> None:
+    st.markdown(
+        f'<div class="fv-page-head"><span class="fv-kicker">{kicker}</span>'
+        f'<h1>{title}</h1><p>{description}</p></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def capability_card(number: int, icon: str, title: str, description: str, tags: tuple[str, ...], page: str) -> None:
+    with st.container(key=f"fv_cap_{number}"):
+        tag_html = "".join(f"<span>{tag}</span>" for tag in tags)
+        st.markdown(
+            f'<div class="fv-card"><div class="fv-card-head"><span class="fv-card-icon">{icon}</span>'
+            f'<span class="fv-card-number">{number:02d} / 05</span></div><h3>{title}</h3>'
+            f'<p>{description}</p><div class="fv-tags">{tag_html}</div></div>',
+            unsafe_allow_html=True,
+        )
+        st.button("Open workspace →", key=f"open_{number}", on_click=go_to, args=(page,))
 
 
 def uploaded_bytes(upload, limit: int) -> bytes:
@@ -66,30 +92,52 @@ def run_action(action, key: str) -> None:
 
 
 with st.sidebar:
-    st.title("🥗 FoodVerse AI")
-    page = st.radio("Explore", ["Overview", "Food recognition", "Freshness", "Kitchen hygiene", "Cooking assistant", "Meal planner"])
+    st.markdown('<div class="fv-brand"><span class="fv-brand-mark">✳</span><div><div class="fv-brand-name">foodverse<i>.</i></div><div class="fv-brand-sub">FOOD INTELLIGENCE WORKSPACE</div></div></div>', unsafe_allow_html=True)
+    page = st.radio("WORKSPACE", PAGES, key="workspace_page")
     st.divider()
     if model_ready():
-        st.success(f"{provider_name().title()} model connected")
+        st.markdown(f'<div class="fv-status"><span class="fv-status-dot"></span><div><strong>{provider_name().title()} model connected</strong><small>Ready for food insights and guidance</small></div></div>', unsafe_allow_html=True)
     else:
-        st.warning("AI key needed for analysis")
-        st.caption("The app owner can add OPENAI_API_KEY or GROQ_API_KEY in Streamlit Cloud secrets.")
+        st.markdown('<div class="fv-status off"><span class="fv-status-dot"></span><div><strong>AI setup needed</strong><small>Add OPENAI_API_KEY or GROQ_API_KEY in Streamlit Cloud secrets.</small></div></div>', unsafe_allow_html=True)
     st.link_button("View React + FastAPI source", GITHUB_URL)
+    st.markdown('<div class="fv-side-note">Streamlit demo · UI v2.0<br>Built from the shared FoodVerse services.</div>', unsafe_allow_html=True)
 
 
 if page == "Overview":
-    st.title("FoodVerse AI")
-    st.subheader("Multimodal food intelligence, in one demo")
-    st.write("Upload food images, kitchen video or audio, or enter text to explore recognition, nutrition, visual freshness, hygiene, cooking guidance and personalized planning.")
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Input types", "4", "Image · Video · Audio · Text", delta_color="off")
-    col2.metric("Capabilities", "5", "Food · Freshness · Hygiene · Cooking · Planning", delta_color="off")
-    col3.metric("Backend", "FastAPI", "Shared Python services", delta_color="off")
-    st.info("This Streamlit companion runs the same Python analysis services as the React/FastAPI project. The GitHub repository contains the full-stack interface and API.")
-    st.caption("Nutrition and safety outputs are estimates. A photo cannot verify microbial safety, and sampled video is not a formal hygiene inspection.")
+    hero_status = "Model connected · Ready for input" if model_ready() else "Connect an AI model to start analysis"
+    st.markdown('<div class="fv-overline">FOODVERSE AI / CONTROL CENTER &nbsp;&nbsp;·&nbsp;&nbsp; IMAGE — VIDEO — AUDIO — TEXT</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<section class="fv-hero"><div class="fv-hero-copy"><span class="fv-hero-tag"><span></span>MULTIMODAL FOOD INTELLIGENCE</span>'
+        '<h1>Every food decision,<br><em>more informed.</em></h1>'
+        '<p>Understand what you eat, how fresh it looks, how safely it is prepared, and what to cook next — all in one workspace.</p>'
+        f'<div class="fv-hero-status">{hero_status}</div></div>'
+        '<div class="fv-hero-art" aria-hidden="true"><div class="fv-orbit"></div><div class="fv-orbit two"></div>'
+        '<div class="fv-core"><span>✳</span><strong>FoodVerse</strong><small>AI ENGINE</small></div>'
+        '<span class="fv-node image">▧ &nbsp;Image</span><span class="fv-node audio">◉ &nbsp;Audio</span><span class="fv-node text">☷ &nbsp;Text</span>'
+        '<span class="fv-node nutrition">Nutrition &nbsp;↗</span><span class="fv-node freshness">Freshness &nbsp;↗</span>'
+        '<span class="fv-node guidance">Guidance &nbsp;↗</span></div></section>',
+        unsafe_allow_html=True,
+    )
+    st.markdown('<div class="fv-section-head"><div><span class="fv-kicker">THE PLATFORM</span><h2>One workspace. Five ways to see more.</h2></div><p>Choose an input. FoodVerse turns model output into useful estimates, visual observations, alerts and next steps.</p></div>', unsafe_allow_html=True)
+    first_row = st.columns(3, gap="medium")
+    cards = [
+        (1, "▧", "Food recognition", "Identify dishes and estimate portions, macros, calories and a health score.", ("IMAGE", "NUTRITION"), "Food recognition"),
+        (2, "❋", "Freshness signals", "Review visible quality cues with storage context and careful safety advice.", ("IMAGE", "SAFETY"), "Freshness"),
+        (3, "◇", "Kitchen hygiene", "Sample footage for gloves, hair restraints, handling and surfaces.", ("VIDEO", "ALERTS"), "Kitchen hygiene"),
+        (4, "♨", "Cooking assistant", "Turn ingredient photos, text or voice into practical recipes.", ("IMAGE", "TEXT", "AUDIO"), "Cooking assistant"),
+        (5, "◈", "Personal meal plans", "Build a day or week around your profile and nutrition goals.", ("PROFILE", "PLANNING"), "Meal planner"),
+    ]
+    for column, card in zip(first_row, cards[:3]):
+        with column:
+            capability_card(*card)
+    second_row = st.columns(3, gap="medium")
+    for column, card in zip(second_row, cards[3:]):
+        with column:
+            capability_card(*card)
+    st.markdown('<div class="fv-trust"><span class="fv-trust-mark">♧</span><div><strong>Evidence first, estimates clearly labeled.</strong><p>Visual freshness is a screening signal, not a microbiological test. Nutrition depends on visible portions and ingredients; hygiene checks use sampled frames.</p></div></div>', unsafe_allow_html=True)
 
 elif page == "Food recognition":
-    st.title("Food recognition & nutrition")
+    page_header("01 / FOOD ANALYZER", "Food recognition & nutrition", "Upload a food photo, describe the portion, or add a voice note to receive a structured nutrition estimate.")
     with st.form("food_form"):
         photo = st.file_uploader("Food photo", type=["jpg", "jpeg", "png", "webp"])
         context = st.text_area("Food or portion context (optional)", max_chars=500)
@@ -121,7 +169,7 @@ elif page == "Food recognition":
         st.caption(" ".join(result.limitations))
 
 elif page == "Freshness":
-    st.title("Visual freshness review")
+    page_header("02 / FOOD SAFETY", "Visual freshness review", "Compare visible food quality cues with your storage context and receive cautious recommendations.")
     with st.form("freshness_form"):
         photo = st.file_uploader("Food photo", type=["jpg", "jpeg", "png", "webp"], key="fresh_photo")
         storage_time = st.text_input("How long has it been stored?", max_chars=100)
@@ -150,7 +198,7 @@ elif page == "Freshness":
         st.caption(" ".join(result.limitations))
 
 elif page == "Kitchen hygiene":
-    st.title("Kitchen video hygiene review")
+    page_header("03 / KITCHEN SAFETY", "Kitchen video hygiene review", "Sample footage for visible hygiene indicators, alerts and an evidence-based compliance score.")
     st.caption("The system samples video frames roughly every 30 seconds and assesses only visible evidence.")
     with st.form("hygiene_form"):
         video = st.file_uploader("Kitchen footage", type=["mp4", "mov", "webm"])
@@ -170,7 +218,7 @@ elif page == "Kitchen hygiene":
         st.caption(" ".join(result.limitations))
 
 elif page == "Cooking assistant":
-    st.title("Smart cooking assistant")
+    page_header("04 / SMART KITCHEN", "Smart cooking assistant", "Describe what you have or upload ingredients to get a practical recipe and ordered cooking steps.")
     with st.form("recipe_form"):
         prompt = st.text_area("Ingredients or cooking goal", placeholder="I have chickpeas, tomatoes and spinach…", max_chars=500)
         photo = st.file_uploader("Ingredient photo (optional)", type=["jpg", "jpeg", "png", "webp"], key="recipe_photo")
@@ -204,7 +252,7 @@ elif page == "Cooking assistant":
             st.warning(result.safety_note)
 
 elif page == "Meal planner":
-    st.title("Personalized daily & weekly meal plans")
+    page_header("05 / PERSONALIZED NUTRITION", "Daily & weekly meal plans", "Build a plan around your profile, goals, eating style and foods to avoid.")
     st.caption("Adult planning aid with estimated targets. It does not replace individualized advice for medical conditions.")
     with st.form("plan_form"):
         a, b, c = st.columns(3)
