@@ -62,7 +62,7 @@ def ask_json(instructions: str, parts: list[dict] | None = None, text: str = "")
         response = model_client().responses.create(
             model=vision_model(),
             instructions=instructions,
-            input=[{"role": "user", "content": ([{"type": "input_text", "text": text}] if text else []) + (parts or [])}],
+            input=[{"role": "user", "content": [{"type": "input_text", "text": f"Respond with a JSON object. {text}".strip()}] + (parts or [])}],
             text={"format": {"type": "json_object"}},
         )
         return json.loads(response.output_text)

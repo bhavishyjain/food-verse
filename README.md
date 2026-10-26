@@ -41,27 +41,36 @@ Streamlit Community Cloud runs a Streamlit Python entrypoint, so `streamlit_app.
 
 For local testing, install `pip install -r requirements.txt`, set a provider key in your shell, and run `streamlit run streamlit_app.py`. Large video jobs may be limited by Streamlit Community Cloud resources; use short clips for demonstration.
 
-## Activity 1.1–1.4 implementation
+## Activity 1 — Project setup
 
-1. **Requirements:** `backend/requirements.txt` pins only imported backend libraries. React dependencies are separately recorded in `package.json`; unused packages from the reference screenshot are intentionally absent.
-2. **Isolated environment:** create and activate a Python virtual environment before installing the backend requirements. The same command is used in local and container setup.
-3. **Food recognition:** the upload route validates file type and size, preprocesses images, combines optional spoken or typed context, calls a vision model, rejects non-food input, and returns structured dish and ingredient classifications.
-4. **Nutrition:** recognized items and estimated weights are matched to built-in approximate nutrient profiles when possible. A deterministic macro/fiber/calorie heuristic produces the health score. The response states whether nutrition came from the reference table or model estimate.
+1. **Requirements:** `backend/requirements.txt` pins the backend libraries; React dependencies are listed in `package.json`.
+2. **Isolated environment:** install the Python dependencies in a project virtual environment to keep development and deployment reproducible.
 
-## Activity 1.5–1.8 implementation
+## Activity 2 — Food recognition and nutrition
 
-5. **Freshness features:** the dedicated route validates and normalizes the image, then applies median filtering for descriptive brightness, color variation, texture variation, and dark-area metrics. These pixel statistics are not spoilage diagnoses.
-6. **Freshness classification:** the vision model reports visible signals and one of three freshness states or insufficient evidence. The application maps the state to conservative guidance and never claims that an apparently fresh item is safe to eat.
-7. **Kitchen hygiene:** FFmpeg samples representative frames. The model records visible status for four defined checks and approximate alert times; deterministic weighted aggregation computes a score only from visible checks. Missing evidence is marked “Not visible.”
-8. **Smart cooking:** text and ingredient-photo routes return structured ingredients, ordered steps, tips and safety notes. Voice notes produce a transcript and contextual guidance.
+1. **Food recognition:** validate and preprocess uploaded images, combine optional text or voice context, and return structured dish and ingredient predictions.
+2. **Nutrition analysis:** estimate calories, macros, fiber and a heuristic health score from portion estimates and a small nutrient reference table, labeling model estimates when no reference matches.
 
-## Activity 1.9–1.13 implementation and checks
+## Activity 3 — Freshness detection
 
-9. **User profiles:** the planner accepts a structured Pydantic profile with adult age, height, weight, activity, goal, eating style, allergies, avoided foods and optional health context. Invalid ranges, overlapping restrictions and pregnancy/breastfeeding are rejected. Raw health measurements are not saved to report history.
-10. **Personalized planning:** users choose a one-day or seven-day plan. A user-selected energy target or a labeled Mifflin-St Jeor estimate informs goal-based macro targets. The model supplies meals, ingredient lists and swaps; the server calculates daily totals and rejects outputs that exceed calorie tolerance, have inconsistent macros, omit meal slots, or explicitly conflict with dietary restrictions. This is a rough adult planning aid, not a clinical prescription.
-11. **Frontend integration:** React uses REST endpoints for all modules and direct workspace paths: `/food-recognition`, `/freshness-detector`, `/hygiene-monitor`, `/kitchen-assistant`, and `/meal-planner`. Browser Back restores the selected module.
-12. **Edge-case checks:** backend tests cover low-resolution and corrupt photos, malformed video, text-only and missing inputs, nutrition references, profile bounds, dietary conflicts, daily and weekly plan structure, and calculated totals. Build and test commands are listed above.
-13. **Demo readiness:** the UI, API contracts, error states and navigation were reviewed locally. The model-backed workflows still require a valid `OPENAI_API_KEY` or `GROQ_API_KEY` and have not been verified against live provider output in this environment. A plan cannot report real adherence without logged meals.
+1. **Visual features:** normalize images and report descriptive brightness, color, texture and dark-area measurements.
+2. **Freshness classification:** return Fresh, Moderately Fresh, Spoiled or insufficient evidence with visible signs and cautious recommendations. A photo cannot establish food safety.
+
+## Activity 4 — Kitchen monitoring and cooking
+
+1. **Hygiene monitoring:** sample kitchen video frames, evaluate visible glove use, hair restraints, handling and surfaces, then generate a score and alerts from observed checks.
+2. **Cooking assistant:** turn text, ingredient photos or transcribed voice requests into recipes, ordered steps, tips and safety notes.
+
+## Activity 5 — Personalized meal planning
+
+1. **User profiles:** validate adult health metrics, goals, preferences, allergies and avoided foods before planning; raw health measurements are not saved to report history.
+2. **Daily and weekly plans:** calculate estimated calorie and macro targets, generate meals and alternatives, and reject plans that conflict with stated dietary constraints.
+
+## Activity 6 — Integration and validation
+
+1. **Frontend integration:** connect React pages to the FastAPI routes for all modules and support direct navigation to each workspace.
+2. **Edge-case checks:** test low-resolution or corrupt images, malformed video, missing inputs, profile limits, dietary conflicts and plan totals.
+3. **Demo readiness:** review the interface, API responses and navigation locally, then verify the Streamlit companion after deployment. A plan cannot report real adherence without logged meals.
 
 ## Architecture and limits
 
